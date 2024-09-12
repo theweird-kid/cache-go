@@ -19,15 +19,6 @@ func NewStore(c Cacher) *Store {
 	}
 }
 
-func (s *Store) getFromCache(key int) (string, bool) {
-	val, ok := s.cache.Get(key)
-	if ok {
-		fmt.Println("returning key from cache..")
-		return val, ok
-	}
-	return "", false
-}
-
 func (s *Store) Get(key int) (string, error) {
 	val, ok := s.cache.Get(key)
 	if ok {
@@ -35,6 +26,7 @@ func (s *Store) Get(key int) (string, error) {
 		if err := s.cache.Remove(key); err != nil {
 			fmt.Println(err)
 		}
+		fmt.Println("returning the value from cache..")
 		return val, nil
 	}
 
@@ -43,6 +35,10 @@ func (s *Store) Get(key int) (string, error) {
 		return "", fmt.Errorf("key not found: %d", key)
 	}
 
-	fmt.Println("returning key from internal storage..")
+	if err := s.cache.Set(key, val); err != nil {
+		return "", err
+	}
+
+	fmt.Println("returning the value from internal storage..")
 	return val, nil
 }

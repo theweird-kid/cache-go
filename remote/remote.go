@@ -16,12 +16,15 @@ func main() {
 	})
 	fmt.Println(client)
 
+	// Subscriber
 	ctx := context.Background()
-
-	for i := 0; i < 100; i++ {
-		if err := client.Publish(ctx, "coordsTopic", i).Err(); err != nil {
+	sub := client.Subscribe(ctx, "coordsTopic")
+	for {
+		msg, err := sub.ReceiveMessage(ctx)
+		if err != nil {
 			log.Fatal(err)
 		}
-	}
 
+		fmt.Printf("%+v\n", msg)
+	}
 }
