@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package server;
+
+option go_package = "./serverpb";
+
+service StoreService {
+  rpc Get (GetRequest) returns (GetResponse);
+  rpc Set (SetRequest) returns (SetResponse);
+}
+
+message GetRequest {
+  int32 key = 1;
+}
+
+message GetResponse {
+  string value = 1;
+  string source = 2; // "cache" or "internal storage"
+}
+
+message SetRequest {
+  int32 key = 1;
+  string value = 2;
+}
+
+message SetResponse {
+  bool success = 1;
+}

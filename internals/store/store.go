@@ -10,7 +10,7 @@ import (
 type Store struct {
 	data  map[int]string
 	cache Ca.Cacher
-	mu    sync.RWMutex
+	mu    sync.Mutex
 }
 
 func NewStore(c Ca.Cacher) *Store {
@@ -26,36 +26,38 @@ func NewStore(c Ca.Cacher) *Store {
 }
 
 func (s *Store) Get(key int) (string, error) {
-	s.mu.RLock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	val, ok := s.cache.Get(key)
-	s.mu.RUnlock()
 	if ok {
-		//burst the cache
-		s.mu.Lock()
-		if err := s.cache.Remove(key); err != nil {
-			fmt.Println(err)
-		}
-		s.mu.Unlock()
-		fmt.Println("returning the value from cache..")
+		// burst the cache
+		s.cache.Remove(key)
+		fmt.Println("returning data from cache")
 		return val, nil
 	}
 
-	s.mu.RLock()
+	// If not found in cache, get from data map
 	val, ok = s.data[key]
-	s.mu.RUnlock()
 	if !ok {
-		return "", fmt.Errorf("key not found: %d", key)
+		return "", fmt.Errorf("key not found")
 	}
 
-	// set the new value into cache
-	s.mu.Lock()
-	if err := s.cache.Set(key, val); err != nil {
-		s.mu.Unlock()
-		fmt.Println(err)
-		return "", err
-	}
-	s.mu.Unlock()
-
-	fmt.Println("returning the value from internal storage..")
+	fmt.Println("returning data from internal storage")
+	s.cache.Set(key, val)
 	return val, nil
+}
+
+func (s *Store) Set(key int, value string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Set the value in the data map
+	fmt.Println("Internal storage updated")
+	s.data[key] = value
+
+	// Optionally, set the value in the cache
+	fmt.Println("cache updated")
+	s.cache.Set(key, value)
+	return nil
 }
