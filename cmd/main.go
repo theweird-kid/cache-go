@@ -1,10 +1,10 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -14,44 +14,17 @@ import (
 	"google.golang.org/grpc"
 )
 
-type server struct {
-	store *store.Store
-	pb.UnimplementedStoreServiceServer
-}
-
-func NewgRPCServer(store *store.Store) *server {
-	return &server{
-		store: store,
-	}
-}
-
-func (s *server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
-	// Implement your logic here
-	key := req.Key
-	data, err := s.store.Get(int(key))
-	if err != nil {
-		return &pb.GetResponse{Value: "example_value", Source: "cache"}, err
-	}
-	return &pb.GetResponse{Value: data}, nil
-}
-
-func (s *server) Set(ctx context.Context, req *pb.SetRequest) (*pb.SetResponse, error) {
-	// Implement your logic here
-	key := req.Key
-	val := req.Value
-	err := s.store.Set(int(key), val)
-	fmt.Println(err)
-	if err != nil {
-		return &pb.SetResponse{Success: false}, err
-	}
-	return &pb.SetResponse{Success: true}, nil
-}
-
 func main() {
 	fmt.Println("Entry Point")
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		log.Fatal("REDIS_ADDR environment variable not set")
+	}
+
 	client := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: redisAddr,
 	})
+
 	fmt.Println(client)
 
 	cache := cache.NewRedisCache(client, time.Second*5)

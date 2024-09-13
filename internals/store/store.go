@@ -7,6 +7,11 @@ import (
 	Ca "github.com/theweird-kid/cache-go/internals/cache"
 )
 
+type NoSQLStore interface {
+	Get(key int) (string, error)
+	Set(key int, value string) error
+}
+
 type Store struct {
 	data  map[int]string
 	cache Ca.Cacher

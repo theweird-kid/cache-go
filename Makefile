@@ -1,6 +1,6 @@
 build:
-	@go build -o bin/main cmd/main.go
+	@go build -o bin/main cmd/*.go
 test:
 	@go test -v ./...
 run: build
-	@./bin/main
+	@REDIS_ADDR=localhost:6379 ./bin/main
